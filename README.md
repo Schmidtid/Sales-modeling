@@ -7,7 +7,8 @@ analysis.ipynb -- блокнот с аналитикой признаков. (П
 optuna_hyperparams.ipynb -- оптимизация catboost модели по параметрам с использованием optuna  
 stacking.ipynb -- стэкинг catboost моделей для улучшения метрики  
 prod.ipynb -- визуализация результатов выхода модели  
-data -- эксель данные для обучения
+data -- эксель данные для обучения  
+catboost_info -- catboost модель  
 
 
 
