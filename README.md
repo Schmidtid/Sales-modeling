@@ -7,8 +7,22 @@ analysis.ipynb -- блокнот с аналитикой признаков. (П
 optuna_hyperparams.ipynb -- оптимизация catboost модели по параметрам с использованием optuna  
 stacking.ipynb -- стэкинг catboost моделей для улучшения метрики  
 prod.ipynb -- визуализация результатов выхода модели  
+vi.ipynb - пробный интерфейс  
 data -- эксель данные для обучения  
-catboost_info -- catboost модель  
+catboost_info -- catboost модель
+
+# Использование 
+Сначало необходимо установить зависимости
+```piip install -r requriments.txt```
+
+Далее возможно через Jupiter Notebook загрузить данные в формате `.csv` или `.xlxs` и получить предсказания.
+
+Пример выхода:
+
+![alt text](catboost_info/image.png)
+
+
+
 
 
 
