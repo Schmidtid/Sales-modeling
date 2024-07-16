@@ -1,11 +1,10 @@
 """Help function"""
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import pandas as pd
 from catboost import CatBoostRegressor
 
-pd.options.mode.copy_on_write = True
 
-class model:
+class Model:
     """Model to forecast sales
 
     Args:
@@ -14,10 +13,10 @@ class model:
     """
     def __init__(self,data) -> None:
         cat = CatBoostRegressor()
-        self.cat = cat.load_model('model_91')
+        self.cat = cat.load_model('models/model_91')
         self.ind = data['Продажи, рубли'].isna().values
         self.data = data
-        self.value = self.predict(data[~self.ind])
+        self.value = self.predict(data[self.ind])
 
     def predict(self, data: pd.DataFrame,
                 param: dict = None):
@@ -29,14 +28,41 @@ class model:
             """
         if param:
             for i, value in param.items():
-                data[i] += value*100
+                data[i] += value*1000
         return self.cat.predict(data)
+    
+    def plt_pred(self):
+        """Plot initial predictions"""
+        fig = go.Figure(layout=go.Layout(height=600, width=1000))
+
+        fig.add_trace(go.Scatter(
+            x=self.data['Начало нед'],
+            y=self.data['Продажи, рубли'], 
+            mode='lines',
+            name='Known data',
+            line=dict(color='blue')
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=self.data['Начало нед'].values[self.ind], 
+            y=self.value,
+            mode='lines', 
+            name='Predicted data',
+            line=dict(color='green')
+        ))
+        fig.update_layout(
+            title='Sales Forecast',
+            xaxis_title='Start of Week',
+            yaxis_title='Sales, Rubles',
+            legend_title='Legend',
+        )
+        return fig
 
     def plot_graph(self,
-                   tv=None, radio=None,
-                   concurent=None, digital=None,
-                   trp= None):
-        """Plot interactive plot
+                   tv:float = 0, radio:float = 0,
+                   concurrent:float = 0, digital:float = 0,
+                   trp:float = 0):
+        """Plot forecasts taking into account changes
         
         Args:
             tv (float): changes for investment in TV advertising
@@ -45,24 +71,31 @@ class model:
             digital (float): changes for investment in digital advertising"""
         names = {'Затраты на ТВ':tv,
                 'Затраты Радио':radio,
-                'Конкуренты, итого затрат':concurent,
+                'Конкуренты, итого затрат':concurrent,
                 'Затраты на диджитал':digital,
                 '(тотал) ТВ, trp':trp,}
-        fig, ax = plt.subplots(1, figsize=(16,8), dpi=100,facecolor='w')
-        ax.plot(self.data['Начало нед'], self.data['Продажи, рубли'],c='b', label='Known data')
+        fig = go.Figure(layout=go.Layout(height=600, width=1200))
+
         pred = self.predict(self.data[self.ind], names)
-        ax.plot(self.data['Начало нед'].values[self.ind], pred, c='g', label='Predict data')
-        ax.legend(['Known data','Predict data'])
-        plt.show()
+        fig.add_trace(go.Scatter(
+            x=self.data['Начало нед'].values[self.ind], 
+            y=pred,
+            mode='lines', 
+            name='Predicted data',
+            line=dict(color='green')
+        ))
+        fig.update_layout(
+            title='Sales Forecast',
+            xaxis_title='Start of Week',
+            yaxis_title='Sales, Rubles',
+        )
+        return fig
 
     def plot_data(self):
         """Plot statistic data"""
         plot = self.cat.get_feature_importance(prettified=True)
-        plot.index = plot['Feature Id']
-        plot = plot.drop(columns='Feature Id')
-        plot = plot.T
-        (plot[['Конкуренты, итого затрат',
-               'Затраты на диджитал','Затраты на ТВ',
-               'Затраты Радио']]/plot.T['Importances'].sum()*100
-        ).plot(kind='barh',xlabel='Importance in forecasting',figsize=(12,8))
-        plt.show()
+        plot = plot[plot['Importances']>1]
+        plot.loc[len(plot)+1,['Feature Id','Importances']] = ['Other',100-plot['Importances'].sum()]
+        fig = go.Figure(data=[go.Pie(labels=plot['Feature Id'], values=plot['Importances'])],
+                        layout=go.Layout(height=600, width=800))
+        return fig
